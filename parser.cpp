@@ -53,13 +53,38 @@ namespace argparse {
                     std::stringstream port_stream(port_str);
                     std::string port;
                     while (std::getline(port_stream, port, ',')) {
-                        try {
-                            detail::_ports.push_back(std::stoi(port));
-                        } catch (const std::exception &e) {
-                            throw std::runtime_error(port + " is not a valid port number");
+                        if (port.find('-') != std::string::npos) {
+                            // Range of ports
+                            size_t pos = port.find('-');
+                            int start_port, end_port;
+                            try {
+                                start_port = std::stoi(port.substr(0, pos));
+                                end_port = std::stoi(port.substr(pos + 1));
+                            } catch (const std::exception &e) {
+                                throw std::runtime_error("invalid port range or port number in range: " + port);
+                            }
+                            if (start_port > end_port) {
+                                throw std::runtime_error("start port cannot be greater than end port");
+                            }
+                            for (int p = start_port; p <= end_port; p++) {
+                                detail::_ports.push_back(p);
+                            }
+                        } else {
+                            try {
+                                detail::_ports.push_back(std::stoi(port));
+                            } catch (const std::exception &e) {
+                                throw std::runtime_error(port + " is not a valid port number");
+                            }
                         }
                     }
 
+                    detail::_show_ports = true;
+                    continue;
+                }
+                if (*it == "-p-") {
+                    for (int p = 1; p <= 65535; p++) {
+                        detail::_ports.push_back(p);
+                    }
                     detail::_show_ports = true;
                     continue;
                 }
@@ -72,7 +97,7 @@ namespace argparse {
                 }
             }
             if (!std::filesystem::exists(*it)) {
-                throw std::runtime_error(std::string(*it) + ": No such file");
+                throw std::runtime_error(std::string(*it) + ": No such flag");
             }
 
             detail::_input_files.push_back(*it);
