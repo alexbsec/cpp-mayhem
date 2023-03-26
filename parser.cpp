@@ -3,6 +3,8 @@
 #include <stdexcept>
 #include <string>
 #include <filesystem>
+#include <algorithm>
+#include <sstream>
 
 namespace argparse {
 
@@ -10,7 +12,7 @@ namespace argparse {
         std::vector<std::string_view> _input_files;
         bool _show_service = false;
         bool _show_ports = false;
-        int _port;
+        std::vector<int> _ports;
     }
 
     const std::vector<std::string_view>& input_files() {
@@ -21,8 +23,8 @@ namespace argparse {
         return detail::_show_service;
     }
 
-    int port() {
-        return detail::_port;
+    std::vector<int> &ports() {
+        return detail::_ports;
     }
 
     bool show_ports() {
@@ -47,11 +49,17 @@ namespace argparse {
                     if (it == args.end()) {
                         throw std::runtime_error("-p/--port flag requires an argument");
                     }
-                    try {
-                        detail::_port = std::stoi(std::string(*it));
-                    } catch (const std::exception &e) {
-                        throw std::runtime_error(std::string(*it) + " is not a valid port number");
+                    std::string port_str(*it);
+                    std::stringstream port_stream(port_str);
+                    std::string port;
+                    while (std::getline(port_stream, port, ',')) {
+                        try {
+                            detail::_ports.push_back(std::stoi(port));
+                        } catch (const std::exception &e) {
+                            throw std::runtime_error(port + " is not a valid port number");
+                        }
                     }
+
                     detail::_show_ports = true;
                     continue;
                 }
@@ -76,7 +84,10 @@ int main(int argc, char* argv[]) {
 
     argparse::parse(argc, argv);
 
-    std::cout << argparse::port() << std::endl;
+    for (int elem : argparse::ports()) {
+        std::cout << elem << std::endl;
+    }
+
 
     return 0;
 }
