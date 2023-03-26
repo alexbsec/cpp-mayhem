@@ -66,14 +66,22 @@ namespace argparse {
                             if (start_port > end_port) {
                                 throw std::runtime_error("start port cannot be greater than end port");
                             }
+                            if (end_port > 65535 || start_port < 1) {
+                                throw std::runtime_error("cannot scan ports below 1 or above 65535");
+                            }
                             for (int p = start_port; p <= end_port; p++) {
                                 detail::_ports.push_back(p);
                             }
                         } else {
+                            int port_to_add;
                             try {
-                                detail::_ports.push_back(std::stoi(port));
+                                port_to_add = std::stoi(port);
+                                detail::_ports.push_back(port_to_add);
                             } catch (const std::exception &e) {
                                 throw std::runtime_error(port + " is not a valid port number");
+                            }
+                            if (port_to_add > 65535 || port_to_add < 1) {
+                                throw std::runtime_error("cannot scan ports below 1 or above 65535");
                             }
                         }
                     }
